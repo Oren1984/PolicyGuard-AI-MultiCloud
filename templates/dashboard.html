@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PolicyGuard AI MultiCloud — Governance Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">PolicyGuard <span>AI MultiCloud</span></div>
+        {% if kill_switch_state %}
+        <div class="status-pill {{ 'pill-ok' if kill_switch_state.mode.value == 'normal' else ('pill-warn' if kill_switch_state.mode.value == 'paused' else 'pill-danger') }}">
+            Kill switch: {{ kill_switch_state.mode.value|upper }}
+        </div>
+        {% else %}
+        <div class="status-pill pill-danger">Kill switch: UNAVAILABLE (treat as EMERGENCY_STOP)</div>
+        {% endif %}
+        <div class="status-pill {{ 'pill-ok' if verification.is_valid else 'pill-danger' }}">
+            Audit chain: {{ 'verified' if verification.is_valid else 'TAMPERED' }} ({{ verification.total_records }} records)
+        </div>
+    </header>
+
+    <main>
+        <section class="cards">
+            <div class="card">
+                <h2>Governance decisions</h2>
+                <ul class="kv-list">
+                    {% for decision, count in decision_counts.items() %}
+                    <li><span>{{ decision }}</span><strong>{{ count }}</strong></li>
+                    {% else %}
+                    <li><span>No decisions recorded yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Findings by severity</h2>
+                <p class="big-number">{{ compliance_total + drift_total }}</p>
+                <ul class="kv-list">
+                    {% for severity, count in severity_counts.items() %}
+                    <li><span>{{ severity }}</span><strong>{{ count }}</strong></li>
+                    {% else %}
+                    <li><span>No findings recorded yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Findings by cloud provider</h2>
+                <ul class="kv-list">
+                    {% for provider, count in provider_counts.items() %}
+                    <li><span>{{ provider }}</span><strong>{{ count }}</strong></li>
+                    {% else %}
+                    <li><span>No findings recorded yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Findings by policy category</h2>
+                <ul class="kv-list">
+                    {% for category, count in category_counts.items() %}
+                    <li><span>{{ category }}</span><strong>{{ count }}</strong></li>
+                    {% else %}
+                    <li><span>No compliance findings recorded yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Drift trends (by drift type)</h2>
+                <p class="big-number">{{ drift_total }}</p>
+                <ul class="kv-list">
+                    {% for drift_type, count in drift_type_counts.items() %}
+                    <li><span>{{ drift_type }}</span><strong>{{ count }}</strong></li>
+                    {% else %}
+                    <li><span>No drift findings recorded yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Remediation status</h2>
+                <ul class="kv-list">
+                    {% for status, count in remediation_status_counts.items() %}
+                    <li><span>{{ status }}</span><strong>{{ count }}</strong></li>
+                    {% else %}
+                    <li><span>No remediation plans recorded yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Active exceptions</h2>
+                <p class="big-number">{{ active_exception_total }}</p>
+                <ul class="kv-list">
+                    {% for exception in expiring_soon %}
+                    <li><span>{{ exception.exception_id }} (expires {{ exception.expires_at }})</span><strong>soon</strong></li>
+                    {% else %}
+                    <li><span>None expiring within 7 days.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Managed systems</h2>
+                <p class="big-number">{{ system_total }}</p>
+                <ul class="kv-list">
+                    {% for system in systems[:10] %}
+                    <li><span>{{ system.system_id }} ({{ system.cloud_provider.value }}/{{ system.environment.value }})</span><strong>{{ system.criticality.name }}</strong></li>
+                    {% else %}
+                    <li><span>No managed systems registered yet.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Recent evaluation / audit activity</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Resource</th>
+                        <th>Actor</th>
+                        <th>Outcome</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in recent_events %}
+                    <tr>
+                        <td>{{ event.timestamp }}</td>
+                        <td><span class="badge">{{ event.action }}</span></td>
+                        <td>{{ event.resource_type }}:{{ event.resource_id }}</td>
+                        <td>{{ event.actor }} ({{ event.actor_role }})</td>
+                        <td>{{ event.outcome }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5">No audit events recorded yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        Read-only governance view. All mutating actions are API-driven. See <code>/docs</code> for the full API.
+    </footer>
+</body>
+</html>

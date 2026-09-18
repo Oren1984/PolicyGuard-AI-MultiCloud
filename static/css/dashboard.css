@@ -1,0 +1,107 @@
+:root {
+    --bg: #0b1220;
+    --surface: #131c2e;
+    --border: #223049;
+    --text: #e6ecf5;
+    --muted: #8fa1bd;
+    --accent: #4f8cff;
+    --ok: #2ecc71;
+    --danger: #e74c3c;
+    --warn: #f1c40f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.brand { font-size: 1.25rem; font-weight: 700; }
+.brand span { color: var(--accent); font-weight: 400; }
+
+.status-pill {
+    margin-left: auto;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.status-pill + .status-pill { margin-left: 8px; }
+.pill-ok { background: rgba(46, 204, 113, 0.15); color: var(--ok); }
+.pill-warn { background: rgba(241, 196, 15, 0.15); color: var(--warn); }
+.pill-danger { background: rgba(231, 76, 60, 0.15); color: var(--danger); }
+
+main { padding: 24px; max-width: 1300px; margin: 0 auto; }
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.card h2 { margin: 0 0 12px; font-size: 1rem; color: var(--muted); font-weight: 600; }
+
+.big-number { font-size: 2rem; font-weight: 700; margin: 0 0 12px; }
+
+.kv-list { list-style: none; margin: 0; padding: 0; }
+.kv-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    gap: 12px;
+}
+.kv-list li:last-child { border-bottom: none; }
+.kv-list span { color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+th { color: var(--muted); font-weight: 600; }
+
+.badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(79, 140, 255, 0.15);
+    color: var(--accent);
+}
+
+footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+footer code { color: var(--accent); }
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg: #f4f6fb;
+        --surface: #ffffff;
+        --border: #e1e6ef;
+        --text: #16233b;
+        --muted: #5b6b85;
+    }
+}

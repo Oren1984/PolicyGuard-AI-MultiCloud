@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Terraform (the .terraform.lock.hcl provider lock file IS committed)
+infrastructure/**/.terraform/
+infrastructure/**/*.tfstate
+infrastructure/**/*.tfstate.*
+infrastructure/**/*.tfplan
+infrastructure/**/crash.log
+
+# Alembic
+migrations/versions/__pycache__/
+
+# Docker / logs
+*.log
+
+# Prompt scratch file (not part of the delivered project)
+promrt_1.md
