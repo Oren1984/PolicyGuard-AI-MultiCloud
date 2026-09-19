@@ -76,6 +76,7 @@ def compose_env_override(monkeypatch):
     # Run app on a non-default host port so this test never collides with a
     # developer's own `docker compose up` on the standard port.
     monkeypatch.setenv("POLICYGUARD_HOST_PORT", "18000")
+    monkeypatch.setenv("POSTGRES_HOST_PORT", "15432")
     yield
     _compose("down", "-v", "--remove-orphans")
 
@@ -123,3 +124,14 @@ def test_docker_compose_config_resolves_cleanly():
     assert "db:" in result.stdout
     assert "app:" in result.stdout
     assert "migrations:" in result.stdout
+
+
+def test_docker_compose_config_honors_postgres_host_port_override(monkeypatch):
+    monkeypatch.setenv("POSTGRES_HOST_PORT", "15432")
+
+    result = subprocess.run(
+        ["docker", "compose", "config"], cwd=REPO_ROOT, capture_output=True, text=True, timeout=30
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert '- mode: ingress\n        target: 5432\n        published: "15432"' in result.stdout
