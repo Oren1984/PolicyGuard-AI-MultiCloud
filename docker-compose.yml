@@ -1,0 +1,98 @@
+name: policyguard
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-policyguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-policyguard}
+      POSTGRES_DB: ${POSTGRES_DB:-policyguard}
+    volumes:
+      - policyguard_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-policyguard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - policyguard-net
+
+  # One-shot migration runner. The "app" service depends on this completing
+  # successfully (not just starting) so the kill-switch seeding in
+  # src/main.py's lifespan hook (spec section 13, fail-closed) always finds
+  # its tables already in place on a fresh database.
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      POLICYGUARD_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-policyguard}:${POSTGRES_PASSWORD:-policyguard}@db:5432/${POSTGRES_DB:-policyguard}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - policyguard-net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      POLICYGUARD_ENVIRONMENT: ${POLICYGUARD_ENVIRONMENT:-local}
+      POLICYGUARD_LOG_LEVEL: ${POLICYGUARD_LOG_LEVEL:-INFO}
+      POLICYGUARD_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-policyguard}:${POSTGRES_PASSWORD:-policyguard}@db:5432/${POSTGRES_DB:-policyguard}
+      POLICYGUARD_AI_PROVIDER: ${POLICYGUARD_AI_PROVIDER:-mock}
+      POLICYGUARD_AI_EXTERNAL_BASE_URL: ${POLICYGUARD_AI_EXTERNAL_BASE_URL:-}
+      POLICYGUARD_AI_EXTERNAL_API_KEY: ${POLICYGUARD_AI_EXTERNAL_API_KEY:-}
+      POLICYGUARD_CONFIDENCE_APPROVAL_THRESHOLD: ${POLICYGUARD_CONFIDENCE_APPROVAL_THRESHOLD:-0.70}
+      POLICYGUARD_CONFIDENCE_HARD_FLOOR: ${POLICYGUARD_CONFIDENCE_HARD_FLOOR:-0.35}
+      POLICYGUARD_KILL_SWITCH_DEFAULT_MODE: ${POLICYGUARD_KILL_SWITCH_DEFAULT_MODE:-normal}
+      POLICYGUARD_MAX_PAYLOAD_BYTES: ${POLICYGUARD_MAX_PAYLOAD_BYTES:-1000000}
+      POLICYGUARD_DEMO_MODE: ${POLICYGUARD_DEMO_MODE:-false}
+    ports:
+      - "${POLICYGUARD_HOST_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    networks:
+      - policyguard-net
+
+  # Optional, off by default: enable with `docker compose --profile monitoring up`.
+  # Kept out of the default `docker compose up` path so the primary demo
+  # flow (db + migrations + app) stays fast and dependency-light; scraping
+  # /metrics is useful for observability demos but not required to exercise
+  # the app itself (spec section 17's metrics are already inspectable
+  # directly at GET /metrics without Prometheus running).
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app
+    networks:
+      - policyguard-net
+    profiles:
+      - monitoring
+
+networks:
+  policyguard-net:
+    driver: bridge
+
+volumes:
+  policyguard_db_data:

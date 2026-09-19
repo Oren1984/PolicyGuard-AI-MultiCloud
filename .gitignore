@@ -38,5 +38,13 @@ migrations/versions/__pycache__/
 # Docker / logs
 *.log
 
-# Prompt scratch file (not part of the delivered project)
+# Prompt scratch files (not part of the delivered project)
 promrt_1.md
+prormt_2.md
+
+# Local, machine-specific extra CA certificates (e.g. a corporate/AV TLS
+# -inspection root) trusted by the Docker build -- see Dockerfile and
+# docs/ENVIRONMENT_LIMITATIONS.md. Never commit a real cert here; the
+# directory structure is preserved via certs/.gitkeep.
+certs/*
+!certs/.gitkeep

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Protocol
 
@@ -29,10 +30,10 @@ class PolicyExceptionRepository(Protocol):
         offset: int = 0,
     ) -> tuple[list[PolicyException], int]: ...
 
-    def list_active_for_system(self, managed_system_id: str) -> list[PolicyException]:
+    def list_active_for_system(self, managed_system_id: str) -> Sequence[PolicyException]:
         """Exceptions relevant to policy/drift evaluation: those currently
         suppressing a violation (APPROVED/ACTIVE) or that recently stopped
         doing so (EXPIRED/REVOKED)."""
         ...
 
-    def list_expiring_before(self, cutoff: datetime) -> list[PolicyException]: ...
+    def list_expiring_before(self, cutoff: datetime) -> Sequence[PolicyException]: ...

@@ -26,6 +26,7 @@ from src.api.dependencies.repositories import (
     get_managed_system_repo,
     get_remediation_repo,
 )
+from src.config import Settings, get_settings
 from src.domain.enums.exception_status import ExceptionStatus
 
 router = APIRouter(tags=["dashboard"])
@@ -47,6 +48,7 @@ def dashboard(
     remediation_repo=Depends(get_remediation_repo),
     audit_repo=Depends(get_audit_repo),
     kill_switch_repo=Depends(get_kill_switch_repo),
+    settings: Settings = Depends(get_settings),
 ) -> HTMLResponse:
     systems, system_total = managed_system_repo.list(limit=200)
     system_by_id = {s.system_id: s for s in systems}
@@ -82,6 +84,20 @@ def dashboard(
     soon = now + timedelta(days=_EXPIRING_SOON_WINDOW_DAYS)
     expiring_soon = [e for e in active_exceptions if e.expires_at and now <= e.expires_at <= soon]
 
+    # Exceptions still awaiting a human decision -- the review queue. Not an
+    # aggregation over findings/decisions (EXCEPTION_REVIEW_REQUIRED is a
+    # theoretical DecisionType a finding-level decision never actually
+    # reaches, since only APPROVED/ACTIVE/EXPIRED/REVOKED exceptions feed
+    # into decision routing -- see ExceptionRepository.list_active_for_system's
+    # own docstring); this reads the exception records directly instead,
+    # which is what a human reviewer actually needs to see.
+    requested_exceptions, requested_total = exception_repo.list(status=ExceptionStatus.REQUESTED, limit=100)
+    under_review_exceptions, under_review_total = exception_repo.list(
+        status=ExceptionStatus.UNDER_REVIEW, limit=100
+    )
+    pending_review_exceptions = list(requested_exceptions) + list(under_review_exceptions)
+    pending_review_total = requested_total + under_review_total
+
     remediation_plans, _ = remediation_repo.list(limit=200)
     remediation_status_counts: dict[str, int] = {}
     for p in remediation_plans:
@@ -111,9 +127,12 @@ def dashboard(
             "active_exceptions": active_exceptions,
             "active_exception_total": active_exception_total,
             "expiring_soon": expiring_soon,
+            "pending_review_exceptions": pending_review_exceptions,
+            "pending_review_total": pending_review_total,
             "remediation_status_counts": remediation_status_counts,
             "verification": verification,
             "recent_events": recent_events,
             "kill_switch_state": kill_switch_state,
+            "demo_mode": settings.demo_mode,
         },
     )

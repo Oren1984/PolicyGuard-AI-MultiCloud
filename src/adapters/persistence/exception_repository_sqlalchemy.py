@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 
 from sqlalchemy import func, select
@@ -78,7 +79,7 @@ class SqlAlchemyPolicyExceptionRepository:
         )
         return [orm_to_policy_exception(r) for r in rows], total
 
-    def list_active_for_system(self, managed_system_id: str) -> list[PolicyException]:
+    def list_active_for_system(self, managed_system_id: str) -> Sequence[PolicyException]:
         rows = (
             self._session.execute(
                 select(PolicyExceptionORM).where(
@@ -91,7 +92,7 @@ class SqlAlchemyPolicyExceptionRepository:
         )
         return [orm_to_policy_exception(r) for r in rows]
 
-    def list_expiring_before(self, cutoff: datetime) -> list[PolicyException]:
+    def list_expiring_before(self, cutoff: datetime) -> Sequence[PolicyException]:
         rows = (
             self._session.execute(
                 select(PolicyExceptionORM).where(

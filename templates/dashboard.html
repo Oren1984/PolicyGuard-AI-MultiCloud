@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="/static/css/dashboard.css" />
 </head>
 <body>
+    {% if demo_mode %}
+    <div class="demo-banner">⚠ DEMO / MOCK DATA — this instance is running with <code>POLICYGUARD_DEMO_MODE=true</code>. Records below may include synthetic demo data seeded by <code>demo/scripts/seed_demo_data.py</code>, not real infrastructure.</div>
+    {% endif %}
     <header class="topbar">
         <div class="brand">PolicyGuard <span>AI MultiCloud</span></div>
         {% if kill_switch_state %}
@@ -104,11 +107,23 @@
             </div>
 
             <div class="card">
+                <h2>Pending human review</h2>
+                <p class="big-number">{{ pending_review_total }}</p>
+                <ul class="kv-list">
+                    {% for exception in pending_review_exceptions[:10] %}
+                    <li><span>{{ exception.exception_id }} ({{ exception.policy_id }} / {{ exception.resource_id }})</span><strong>{{ exception.status.value }}</strong></li>
+                    {% else %}
+                    <li><span>No exceptions awaiting review.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
                 <h2>Managed systems</h2>
                 <p class="big-number">{{ system_total }}</p>
                 <ul class="kv-list">
                     {% for system in systems[:10] %}
-                    <li><span>{{ system.system_id }} ({{ system.cloud_provider.value }}/{{ system.environment.value }})</span><strong>{{ system.criticality.name }}</strong></li>
+                    <li><span>{{ system.system_id }} ({{ system.cloud_provider.value }}/{{ system.environment.value }}){% if system.tags.get('is_demo') == 'true' %} <span class="badge badge-demo">demo</span>{% endif %}</span><strong>{{ system.criticality.name }}</strong></li>
                     {% else %}
                     <li><span>No managed systems registered yet.</span></li>
                     {% endfor %}

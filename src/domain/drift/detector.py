@@ -92,7 +92,9 @@ def detect_drift(
                 previous_value=f"resource_type={desired_r.resource_type.value}, region={desired_r.region}",
                 current_value=None,
                 expected_value="resource present, matching the approved architecture",
-                why_it_matters="Unexplained disappearance may indicate unauthorized deletion or a blind spot.",
+                why_it_matters=(
+                    "Unexplained disappearance may indicate unauthorized deletion or a blind spot."
+                ),
                 severity=PolicySeverity.MEDIUM,
                 evidence=("current_resource_present=false",),
                 remediation="Confirm intentional deprovisioning or investigate the missing resource.",
@@ -459,7 +461,9 @@ def _detect_exception_drift(
                 previous_value="status=active",
                 current_value=f"expires_at={exception.expires_at.isoformat()}",
                 expected_value="status=expired",
-                why_it_matters="An expired exception must stop suppressing findings immediately (fail closed).",
+                why_it_matters=(
+                    "An expired exception must stop suppressing findings immediately (fail closed)."
+                ),
                 severity=PolicySeverity.HIGH,
                 evidence=(f"exception_id={exception.exception_id}",),
                 remediation="Transition the exception to EXPIRED and re-evaluate the underlying violation.",

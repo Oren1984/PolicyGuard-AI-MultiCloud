@@ -268,7 +268,9 @@ def _pol_missing_high_availability(ctx: PolicyEvaluationContext):
     if not ctx.resource.attributes.high_availability_configured:
         return PolicyCheckOutcome(
             passed=False,
-            explanation=f"{ctx.resource.name} is a critical resource without high-availability configuration.",
+            explanation=(
+                f"{ctx.resource.name} is a critical resource without high-availability configuration."
+            ),
             evidence=("attributes.high_availability_configured=false",),
         )
     return PolicyCheckOutcome(passed=True, explanation="")
@@ -541,7 +543,9 @@ def build_default_policy_pack() -> PolicyPack:
             severity=PolicySeverity.HIGH,
             evaluate=_pol_expired_policy_exception,
             required_evidence=("has_expired_or_revoked_exception_on_record",),
-            explanation_template="{resource_name} has an expired/revoked exception no longer suppressing a violation.",
+            explanation_template=(
+                "{resource_name} has an expired/revoked exception no longer suppressing a violation."
+            ),
             remediation_guidance="Re-request an exception or remediate the underlying violation immediately.",
             exception_eligible=False,
         ),

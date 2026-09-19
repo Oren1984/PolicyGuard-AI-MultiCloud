@@ -30,7 +30,9 @@ class RevokePolicyExceptionUseCase:
         self._authz = authz
         self._clock = clock
 
-    def execute(self, exception_id: str, *, reason: str, actor: Actor, correlation_id: str) -> PolicyException:
+    def execute(
+        self, exception_id: str, *, reason: str, actor: Actor, correlation_id: str
+    ) -> PolicyException:
         self._authz.authorize_revocation(actor)
         exception = self._exception_repo.get(exception_id)
         validate_transition(exception.status, ExceptionStatus.REVOKED)

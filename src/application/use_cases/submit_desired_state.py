@@ -17,7 +17,9 @@ class SubmitDesiredStateSnapshotUseCase:
         self._snapshot_repo = snapshot_repo
         self._audit_repo = audit_repo
 
-    def execute(self, snapshot: DesiredStateSnapshot, *, actor: Actor, correlation_id: str) -> DesiredStateSnapshot:
+    def execute(
+        self, snapshot: DesiredStateSnapshot, *, actor: Actor, correlation_id: str
+    ) -> DesiredStateSnapshot:
         created = self._snapshot_repo.create(snapshot)
         self._audit_repo.append(
             actor=actor.actor_id,

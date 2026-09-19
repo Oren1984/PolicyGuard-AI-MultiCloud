@@ -41,6 +41,13 @@ class Settings(BaseSettings):
 
     cors_allow_origins: list[str] = Field(default_factory=list)
 
+    # Purely cosmetic: shows a "DEMO / MOCK DATA" banner on the dashboard
+    # (src/api/routes/dashboard.py). Defaults off. Never enables any data
+    # loading by itself -- demo/scripts/seed_demo_data.py is a separate,
+    # explicitly-invoked script that independently requires this same flag
+    # (see its own module docstring) before it will write anything.
+    demo_mode: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:

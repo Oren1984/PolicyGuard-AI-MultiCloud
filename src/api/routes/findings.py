@@ -108,6 +108,24 @@ def get_finding(
     return _finding_to_response(kind, repo.get(finding_id))
 
 
+@router.patch("/remediation-plans/{plan_id}/status", response_model=RemediationPlanResponse)
+def update_remediation_status(
+    plan_id: str,
+    payload: RemediationStatusUpdateRequest,
+    actor: Actor = Depends(get_actor),
+    use_case: UpdateRemediationStatusUseCase = Depends(get_update_remediation_status_use_case),
+    _mode=Depends(require_mutation_allowed),
+) -> RemediationPlanResponse:
+    updated = use_case.execute(
+        plan_id,
+        target_status=RemediationStatus(payload.target_status),
+        verification_evidence=tuple(payload.verification_evidence),
+        actor=actor,
+        correlation_id=get_correlation_id(),
+    )
+    return _remediation_to_response(updated)
+
+
 @router.patch("/{kind}/{finding_id}/status", response_model=ComplianceFindingResponse | DriftFindingResponse)
 def update_finding_status(
     kind: FindingKind,
@@ -224,24 +242,6 @@ def create_remediation_plan(
         payload={"finding_id": finding_id, "finding_kind": kind},
     )
     return _remediation_to_response(created)
-
-
-@router.patch("/remediation-plans/{plan_id}/status", response_model=RemediationPlanResponse)
-def update_remediation_status(
-    plan_id: str,
-    payload: RemediationStatusUpdateRequest,
-    actor: Actor = Depends(get_actor),
-    use_case: UpdateRemediationStatusUseCase = Depends(get_update_remediation_status_use_case),
-    _mode=Depends(require_mutation_allowed),
-) -> RemediationPlanResponse:
-    updated = use_case.execute(
-        plan_id,
-        target_status=RemediationStatus(payload.target_status),
-        verification_evidence=tuple(payload.verification_evidence),
-        actor=actor,
-        correlation_id=get_correlation_id(),
-    )
-    return _remediation_to_response(updated)
 
 
 def _resolve_findings(refs, compliance_repo, drift_repo) -> list:
